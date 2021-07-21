@@ -8,6 +8,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -24,10 +26,16 @@ public class ClientTest {
 	
 	
 	private HttpServer server;
+	private Client client;
+	private WebTarget target;
 
 	@Before
 	public void startaServidor() {
 		server = Servidor.inicializaServidor();
+		ClientConfig config = new ClientConfig();
+		config.register(new LoggingFilter());
+		this.client = ClientBuilder.newClient(config);
+		this.target = client.target("http://localhost:8080");
 	}
 	
 	@After
@@ -39,8 +47,6 @@ public class ClientTest {
 	
 	@Test
 	public void testaQueBuscarUmCarrinhoTrazOCarrinhoEsperado() {
-		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target("http://localhost:8080");
 		String conteudo = target.path("/carrinhos/1").request().get(String.class);
 		Carrinho carrinho = (Carrinho) new XStream().fromXML(conteudo);
 		Assert.assertEquals("Rua Vergueiro 3185, 8 andar", carrinho.getRua());
@@ -49,9 +55,7 @@ public class ClientTest {
 	
 	@Test
 	public void testaQueSuportaNovosCarrinhos() {
-		Client client = ClientBuilder.newClient();
-        WebTarget target = client.target("http://localhost:8080");
-        Carrinho carrinho = new Carrinho();
+		Carrinho carrinho = new Carrinho();
         carrinho.adiciona(new Produto(314L, "Tablet", 999, 1));
         carrinho.setRua("Rua Vergueiro");
         carrinho.setCidade("Sao Paulo");
@@ -65,8 +69,6 @@ public class ClientTest {
 	
 	@Test
     public void testaQueBuscarUmProjetoTrazOProjetoEsperado() {
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target("http://localhost:8080");
         String conteudo = target.path("/projetos/1").request().get(String.class);
         Projeto projeto = (Projeto) new XStream().fromXML(conteudo);
         Assert.assertEquals("Minha loja", projeto.getNome());
